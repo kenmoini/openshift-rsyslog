@@ -1,0 +1,34 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: rsyslog-enhanced
+  namespace: openshift-logging
+  labels:
+    app: rsyslog-enhanced
+spec:
+  successfulBuildsHistoryLimit: 2
+  failedBuildsHistoryLimit: 2
+  source:
+    type: Git
+    git:
+      uri: https://github.com/kenmoini/openshift-rsyslog
+    contextDir: .
+  strategy:
+    type: Docker                      
+    dockerStrategy:
+      dockerfilePath: Containerfile
+      volumes:
+      - name: etc-pki-entitlement
+        mounts:
+          - destinationPath: /etc/pki/entitlement
+        source:
+          type: Secret
+          secret:
+            secretName: etc-pki-entitlement
+  output:
+    to:
+      kind: ImageStreamTag
+      name: rsyslog-enhanced:latest
+  triggers:
+  - type: ImageChange
+  - type: ConfigChange

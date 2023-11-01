@@ -27,7 +27,7 @@ spec:
               value: '192.168.42.102' # Change this to match your environment
             - name: SYSLOGD_OPTIONS
               value: '-f /config/rsyslog.conf'
-          image: registry.redhat.io/rhel8/rsyslog
+          image: rsyslog-enhanced:latest
           command: ["/usr/sbin/rsyslogd","-n","-f","/config/rsyslog.conf"]
           imagePullPolicy: Always
           resources:
