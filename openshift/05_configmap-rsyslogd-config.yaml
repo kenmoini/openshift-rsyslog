@@ -36,7 +36,7 @@ data:
         property(name="msg")
         }
     
-  openshift_api.conf: |
+  openshift_audit_logs.conf: |
     # Forward k8s-audit logs
     ruleset(name="audit_logs") {
       action(type="omfwd" name="splunk_api_endpoint" Template="auditlog-forwarding" Target=`echo $LOGSERVER` Port="514" Protocol="udp" )
@@ -48,6 +48,69 @@ data:
         Severity="info"
         Facility="local0"
         ruleset="audit_logs")
+
+  openshift_system_logs.conf: |
+    ruleset(name="system_logs")
+    {
+        # THESE ARE GLOBALS CURRENTLY MANUALLY SET
+        #set $.containertag = "{{ .Values.clustertag }}.container";
+        set $.containertag = "mega-sno.container";
+        #set $.logeventtag = "{{ .Values.clustertag }}.logevent";
+        set $.logeventtag = "mega-sno.logevent";
+        #set $.securityeventtag = "{{ .Values.clustertag }}.securityevent";
+        set $.securityeventtag = "mega-sno.securityevent";
+        #set $.clustername = "{{ .Values.clustername }}";
+        set $.clustername = "mega-sno";
+
+        #set $.pod_namespace_container = re_extract($!metadata!filename, "/var/log/containers/(.*).log", 0, 1, "");
+        #set $.pod = field($.pod_namespace_container, "_", 1);
+        #set $.namespace = field($.pod_namespace_container, "_", 2);
+        #set $.container = field($.pod_namespace_container, "_", 3);
+
+        # THESE COME FROM THE FILENAME
+        set $.pod_namespace_container = re_extract($!metadata!filename, "/var/log/containers/(.*)-[a-f0-9]+.log", 0, 1, "");
+        set $.pod = field($.pod_namespace_container, 95, 1);
+        set $.namespace = field($.pod_namespace_container, 95, 2);
+        set $.container = field($.pod_namespace_container, 95, 3);
+        
+        set $!docker!container_id = $.container;
+        set $!kubernetes!host = $hostname;
+        set $!kubernetes!pod_name = $.pod;
+        set $!kubernetes!namespace_name = $.namespace;
+        set $!kubernetes!container_name = $.container;
+        set $!kubernetes!labels!application = field($.namespace, 45, 1);
+        #set $.rc = re_extract($.pod, '(.+)-[a-f0-9]+', 0, 1, "");
+        #set $!kubernetes!labels!deploymentConfig = re_extract($.rc, '(.+)-[a-f0-9]+', 0, 1, $.rc);
+        set $!kubernetes!labels!deploymentConfig = re_extract($.pod, '(.*)-[a-f0-9]+-', 0, 1, "");
+        set $!kubernetes!labels!microservice = $!kubernetes!labels!deploymentConfig;
+        set $!hostname = $hostname;
+        set $.writetime = exec_template("timereportedrfc3339");
+        set $.message = $msg;
+        set $!message = $.message;
+        set $!@timestamp = $.writetime;
+        unset $!metadata;
+
+        # Gather only OpenShift Namespaces
+        if not ($.namespace contains "openshift-") and not ($.namespace contains "kube-") then {
+          stop
+        }
+        
+        action(type="omfwd"
+            target  = `echo $LOGSERVER`
+            port    = "514"
+            protocol= "udp"
+            #template= "kube-log-forwarding"
+            template= "log-forwarding"
+            )
+        stop
+    }
+
+    # Follow the container log files
+    input(type="imfile" file="/var/log/containers/*.log"
+           tag="kubernetes"
+           Severity="info"
+           Facility="local0"
+           ruleset="system_logs")
 
   rsyslog.conf: |
     global(MaxMessageSize="16384")
@@ -68,7 +131,9 @@ data:
     #### GLOBAL DIRECTIVES ####
     # Include all config files in /etc/rsyslog.d/
     $IncludeConfig /config/templates.conf
-    $IncludeConfig /config/openshift_api.conf
+
+    #$IncludeConfig /config/openshift_audit_logs.conf
+    #$IncludeConfig /config/openshift_system_logs.conf
 
     # Gather Kubernetes Metadata from the filename
     ruleset(name="container_logs")
