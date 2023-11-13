@@ -2,7 +2,6 @@ kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: rsyslogd
-  namespace: openshift-logging
   labels:
     app: rsyslogd
 spec:

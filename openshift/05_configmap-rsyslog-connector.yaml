@@ -3,7 +3,6 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: rsyslogd-connector
-  namespace: openshift-logging
 data:
   LOGSERVER: 'rsyslog-service.openshift-splunk.svc.cluster.local'
   LOGSERVER_PORT: '5514'

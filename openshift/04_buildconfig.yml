@@ -2,7 +2,6 @@ apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
   name: rsyslog-enhanced
-  namespace: openshift-logging
   labels:
     app: rsyslog-enhanced
 spec:

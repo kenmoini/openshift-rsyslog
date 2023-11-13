@@ -3,7 +3,6 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: logcollector
-  namespace: openshift-logging
 
 ---
 kind: RoleBinding
