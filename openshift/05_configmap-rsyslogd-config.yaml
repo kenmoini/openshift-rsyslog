@@ -40,7 +40,7 @@ data:
   openshift_audit_logs.conf: |
     # Forward k8s-audit logs
     ruleset(name="audit_logs") {
-      action(type="omfwd" name="splunk_api_endpoint" Template="auditlog-forwarding" Target=`echo $LOGSERVER` Port="514" Protocol="udp" )
+      action(type="omfwd" name="splunk_api_endpoint" Template="auditlog-forwarding" Target=`echo $LOGSERVER` Port=`echo $LOGSERVER_PORT` Protocol="udp" )
       stop
     }
 
@@ -98,7 +98,7 @@ data:
         
         action(type="omfwd"
             target  = `echo $LOGSERVER`
-            port    = "514"
+            port    = `echo $LOGSERVER_PORT`
             protocol= "udp"
             #template= "kube-log-forwarding"
             template= "log-forwarding"
@@ -196,7 +196,7 @@ data:
         action(type="mmjsonparse")
         action(type="omfwd"
             target  = `echo $LOGSERVER`
-            port    = "514"
+            port    = `echo $LOGSERVER_PORT`
             protocol= "udp"
             #template= "kube-log-forwarding"
             template= "json-log-forwarding"
@@ -216,7 +216,7 @@ data:
     #{
     #    action(type="omfwd"
     #        target  = `echo $LOGSERVER`
-    #        port    = "514"
+    #        port    = `echo $LOGSERVER_PORT`
     #        protocol= "udp"
     #        )
     #}

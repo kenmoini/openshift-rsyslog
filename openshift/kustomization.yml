@@ -6,4 +6,5 @@ resources:
   - 00_namespace.yml
   - 02_rbac.yml
   - 05_configmap-rsyslogd-config.yaml
+  - 05_configmap-rsyslog-connector.yaml
   - 10_daemonset-rsyslogd.yaml
